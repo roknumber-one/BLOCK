@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BLOCK — 블로그를 책으로</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Noto+Serif+KR:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --ink:     #0f0f0d;
+      --ink-60:  #6b6b65;
+      --ink-30:  #b8b8b0;
+      --cream:   #f5f2eb;
+      --cream-d: #ede9df;
+      --white:   #ffffff;
+      --gold:    #b8962e;
+      --gold-l:  #d4af50;
+      --green:   #1a4a2e;
+      --green-l: #2d7a4f;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* ── LOADING ── */
+    #loadScreen {
+      position: fixed; inset: 0; z-index: 999;
+      background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity 0.7s ease, visibility 0.7s;
+    }
+    #loadScreen.hide { opacity: 0; visibility: hidden; }
+    .load-inner { text-align: center; }
+    .load-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(40px, 12vw, 64px);
+      font-weight: 900; color: var(--white);
+      letter-spacing: 0.2em;
+      display: flex; align-items: center; gap: 14px; justify-content: center;
+    }
+    .load-book-icon { display: flex; gap: 4px; align-items: flex-end; }
+    .load-book-icon span { display: block; width: 9px; background: var(--gold); border-radius: 1px; }
+    .load-book-icon span:nth-child(1) { height: 36px; animation: bookRise 0.6s 0.2s ease both; }
+    .load-book-icon span:nth-child(2) { height: 48px; animation: bookRise 0.6s 0.35s ease both; }
+    .load-book-icon span:nth-child(3) { height: 28px; animation: bookRise 0.6s 0.5s ease both; }
+    @keyframes bookRise { from { height: 0; opacity: 0; } }
+    .load-sub {
+      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); margin-top: 1rem;
+      animation: fadeIn 0.6s 0.8s ease both;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 56px; padding: 0 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(245,242,235,0.94);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(184,150,46,0.15);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 900;
+      color: var(--ink); letter-spacing: 0.2em;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer; text-decoration: none;
+    }
+    .nav-book-icon { display: flex; gap: 3px; align-items: flex-end; }
+    .nav-book-icon span { display: block; width: 4px; background: var(--ink); border-radius: 1px; }
+    .nav-book-icon span:nth-child(1) { height: 14px; }
+    .nav-book-icon span:nth-child(2) { height: 19px; }
+    .nav-book-icon span:nth-child(3) { height: 11px; }
+    /* 모바일: 링크 숨기고 CTA만 */
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a {
+      font-size: 13px; font-weight: 400; color: var(--ink-60);
+      text-decoration: none; letter-spacing: 0.05em;
+      transition: color 0.2s; cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta {
+      background: var(--ink) !important; color: var(--white) !important;
+      padding: 7px 16px; border-radius: 2px; font-weight: 500 !important;
+      font-size: 13px !important;
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; min-height: 100vh; padding-top: 56px; }
+    .page.on { display: block; }
+
+    /* ══════════════════════
+       LANDING
+    ══════════════════════ */
+
+    /* HERO */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 56px);
+    }
+    .hero-left {
+      padding: 4rem 3rem 4rem 4rem;
+      display: flex; flex-direction: column; justify-content: center;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 11px; font-weight: 500; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem;
+    }
+    .hero-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--gold); }
+    .hero-h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 4.5vw, 70px);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -0.5px; color: var(--ink); margin-bottom: 1.25rem;
+    }
+    .hero-h1 em { font-style: italic; color: var(--green); }
+    .hero-sub {
+      font-size: 15px; line-height: 1.8; color: var(--ink-60);
+      font-weight: 300; margin-bottom: 2.5rem;
+      word-break: keep-all; /* 한국어 줄바꿈 최적화 */
+    }
+    .hero-input-group { display: flex; flex-direction: column; gap: 10px; }
+    .hero-input-row {
+      display: flex; background: var(--white);
+      border: 1.5px solid rgba(15,15,13,0.15); border-radius: 2px; overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .hero-input-row:focus-within { border-color: var(--ink); box-shadow: 0 0 0 3px rgba(15,15,13,0.06); }
+    .hero-input-row input {
+      flex: 1; padding: 13px 14px; border: none; outline: none;
+      background: transparent; font-size: 13px; font-family: inherit; color: var(--ink);
+      min-width: 0;
+    }
+    .hero-input-row input::placeholder { color: var(--ink-30); font-size: 12px; }
+    .hero-input-row button {
+      padding: 0 18px; background: var(--ink); color: var(--white);
+      border: none; cursor: pointer; font-size: 13px; font-weight: 500;
+      font-family: inherit; white-space: nowrap; transition: background 0.2s;
+      flex-shrink: 0;
+    }
+    .hero-input-row button:hover { background: var(--green); }
+    .hero-note {
+      font-size: 11px; color: var(--ink-30);
+      display: flex; align-items: center; gap: 5px;
+      word-break: keep-all;
+    }
+    .hero-note::before { content: '✦'; font-size: 7px; color: var(--gold); flex-shrink: 0; }
+
+    /* HERO RIGHT — 책 목업 */
+    .hero-right {
+      background: var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      position: relative; overflow: hidden;
+      min-height: 360px;
+    }
+    .hero-right::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 30% 40%, rgba(184,150,46,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(26,74,46,0.18) 0%, transparent 60%);
+    }
+    .book-stack {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .stacked-book {
+      display: flex; cursor: default;
+      transition: transform 0.3s ease;
+      filter: drop-shadow(0 10px 24px rgba(0,0,0,0.45));
+    }
+    .stacked-book:hover { transform: translateY(-8px) rotate(-1.5deg) !important; }
+    .sb-spine { width: 18px; border-radius: 3px 0 0 3px; }
+    .sb-cover {
+      width: 140px; height: 196px;
+      border-radius: 0 4px 4px 0;
+      padding: 18px 16px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; overflow: hidden;
+    }
+    .sb-cover::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+    }
+    .sb-label { font-size: 7px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.4; }
+    .sb-title { font-family: 'Noto Serif KR', serif; font-size: 15px; font-weight: 700; line-height: 1.4; }
+    .sb-deco { width: 28px; height: 1.5px; }
+    .sb-author { font-size: 9px; opacity: 0.55; }
+    .sb-pages {
+      width: 7px;
+      background: repeating-linear-gradient(180deg, #f8f4ec 0px, #f8f4ec 3px, #e8e3d8 3px, #e8e3d8 4px);
+      border-radius: 0 2px 2px 0;
+    }
+    .book1 .sb-spine { background: linear-gradient(180deg, #0a2d1a 0%, #1a4a2e 100%); }
+    .book1 .sb-cover { background: linear-gradient(145deg, #1a4a2e, #2d7a4f); color: white; }
+    .book1 .sb-deco  { background: var(--gold); }
+    .book2 .sb-spine { background: linear-gradient(180deg, #3a1a00 0%, #6b3a0a 100%); }
+    .book2 .sb-cover { background: linear-gradient(145deg, #6b3a0a, #a05c1a); color: white; }
+    .book2 .sb-deco  { background: #f0c060; }
+    .book3 .sb-spine { background: linear-gradient(180deg, #1a0a2e 0%, #3a1a5a 100%); }
+    .book3 .sb-cover { background: linear-gradient(145deg, #2a1845, #4a2a7a); color: white; }
+    .book3 .sb-deco  { background: #b090e0; }
+    .stacked-book:nth-child(1) { margin-bottom: -8px; z-index: 3; }
+    .stacked-book:nth-child(2) { transform: rotate(-3deg) translateX(16px); z-index: 2; }
+    .stacked-book:nth-child(3) { transform: rotate(2.5deg) translateX(-18px); z-index: 1; margin-top: -8px; }
+    .hero-quote {
+      position: absolute; bottom: 2rem; left: 2rem; right: 2rem;
+      font-family: 'Playfair Display', serif; font-style: italic;
+      font-size: 12px; color: rgba(255,255,255,0.28); line-height: 1.7;
+      border-left: 1px solid rgba(184,150,46,0.35); padding-left: 1rem;
+      word-break: keep-all;
+    }
+
+    /* HOW IT WORKS */
+    .how { background: var(--white); padding: 5rem 4rem; }
+    .section-eyebrow {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 0.6rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px, 3.5vw, 44px);
+      font-weight: 700; line-height: 1.2; color: var(--ink); margin-bottom: 3rem;
+      word-break: keep-all;
+    }
+    .steps-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 0; border: 1px solid rgba(15,15,13,0.08);
+    }
+    .step-block {
+      padding: 2rem 1.5rem;
+      border-right: 1px solid rgba(15,15,13,0.08);
+      position: relative;
+      display: block;
+    }
+    .step-block:last-child { border-right: none; }
+    .step-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 44px; font-weight: 900;
+      color: var(--ink); opacity: 0.15;
+      line-height: 1; margin-bottom: 0.75rem;
+    }
+    /* 모바일 전용 숫자 뱃지 */
+    .step-num-badge {
+      display: none;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--ink); color: var(--white);
+      font-family: 'Playfair Display', serif;
+      font-size: 14px; font-weight: 700;
+      align-items: center; justify-content: center;
+      margin-bottom: 0.6rem;
+    }
+    .step-block h3 { font-size: 14px; font-weight: 600; margin-bottom: 0.4rem; word-break: keep-all; }
+    .step-block p  { font-size: 13px; color: var(--ink-60); line-height: 1.65; word-break: keep-all; }
+    .step-arrow {
+      position: absolute; top: 50%; right: -11px;
+      transform: translateY(-50%);
+      width: 22px; height: 22px; background: var(--gold);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2; border-radius: 50%; font-size: 9px; color: white;
+    }
+    .step-block:last-child .step-arrow { display: none; }
+
+    /* DARK BAND */
+    .dark-band {
+      background: var(--ink); padding: 5rem 4rem;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;
+    }
+    .dark-band h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(26px, 3vw, 42px); font-weight: 700;
+      color: var(--white); line-height: 1.25; margin-bottom: 1.25rem;
+      word-break: keep-all;
+    }
+    .dark-band p {
+      font-size: 14px; color: rgba(255,255,255,0.45);
+      line-height: 1.8; margin-bottom: 0; word-break: keep-all;
+    }
+    .gold-line { width: 40px; height: 2px; background: var(--gold); margin-bottom: 1.25rem; }
+    .features-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .feature-row {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 0.9rem 1rem;
+      border: 1px solid rgba(255,255,255,0.07); border-radius: 2px;
+      transition: background 0.2s;
+    }
+    .feature-row:hover { background: rgba(255,255,255,0.04); }
+    .feature-icon {
+      width: 30px; height: 30px; flex-shrink: 0;
+      background: rgba(184,150,46,0.15); border-radius: 2px;
+      display: flex; align-items: center; justify-content: center; font-size: 13px;
+    }
+    .feature-row h4 { font-size: 13px; font-weight: 500; color: var(--white); margin-bottom: 2px; }
+    .feature-row p  { font-size: 12px; color: rgba(255,255,255,0.38); line-height: 1.5; word-break: keep-all; }
+
+    /* PRICING */
+    .pricing { padding: 5rem 4rem; background: var(--cream); }
+    .price-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1.5px; background: rgba(15,15,13,0.08); margin-top: 2.5rem;
+    }
+    .price-card { background: var(--cream); padding: 2rem 1.75rem; transition: background 0.2s; }
+    .price-card:hover { background: var(--white); }
+    .price-card.featured { background: var(--ink); }
+    .price-tag {
+      font-size: 10px; font-weight: 600; letter-spacing: 0.15em;
+      text-transform: uppercase; color: var(--gold); margin-bottom: 1rem;
+    }
+    .price-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; margin-bottom: 0.4rem; }
+    .price-card.featured .price-name { color: var(--white); }
+    .price-amount {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; font-weight: 700; color: var(--green); line-height: 1; margin-bottom: 0.2rem;
+    }
+    .price-card.featured .price-amount { color: var(--gold); }
+    .price-unit { font-size: 12px; color: var(--ink-60); margin-bottom: 1.75rem; }
+    .price-card.featured .price-unit { color: rgba(255,255,255,0.35); }
+    .price-list { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-bottom: 1.75rem; }
+    .price-list li { font-size: 13px; color: var(--ink-60); display: flex; gap: 8px; word-break: keep-all; }
+    .price-card.featured .price-list li { color: rgba(255,255,255,0.55); }
+    .price-list li::before { content: '—'; color: var(--gold); flex-shrink: 0; }
+    .btn-book {
+      display: block; width: 100%; padding: 12px;
+      background: var(--ink); color: var(--white); border: none; cursor: pointer;
+      font-size: 13px; font-weight: 500; letter-spacing: 0.05em;
+      font-family: inherit; text-align: center; text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn-book:hover { background: var(--green); }
+    .price-card.featured .btn-book { background: var(--gold); color: var(--ink); }
+    .price-card.featured .btn-book:hover { background: var(--gold-l); }
+
+    /* FOOTER */
+    footer {
+      background: var(--ink); padding: 2.5rem 4rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .f-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 900; color: var(--white);
+      letter-spacing: 0.2em;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .f-book-icon { display: flex; gap: 3px; align-items: flex-end; }
+    .f-book-icon span { display: block; width: 4px; background: var(--white); border-radius: 1px; }
+    .f-book-icon span:nth-child(1) { height: 14px; }
+    .f-book-icon span:nth-child(2) { height: 19px; }
+    .f-book-icon span:nth-child(3) { height: 11px; }
+    footer p { font-size: 12px; color: rgba(255,255,255,0.22); }
+
+    /* ══════════════════════
+       MAKE PAGE
+    ══════════════════════ */
+    .make-page { max-width: 720px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+    .make-header { margin-bottom: 2rem; }
+    .make-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem;
+    }
+    .make-header p { font-size: 14px; color: var(--ink-60); }
+
+    /* PROGRESS */
+    .progress { display: flex; align-items: center; margin-bottom: 2.5rem; overflow-x: auto; padding-bottom: 2px; }
+    .p-step {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+      font-size: 11px; font-weight: 500; color: var(--ink-30);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .p-step.active { color: var(--ink); }
+    .p-step.done { color: var(--green); }
+    .p-dot {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--cream-d); border: 1.5px solid transparent;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; transition: all 0.3s; flex-shrink: 0;
+    }
+    .p-step.active .p-dot { background: var(--ink); color: var(--white); }
+    .p-step.done   .p-dot { background: var(--green); color: var(--white); }
+    .p-line { flex: 1; min-width: 12px; height: 1px; background: var(--cream-d); margin: 0 4px; transition: background 0.3s; }
+    .p-line.done { background: var(--green); }
+    /* 모바일: 텍스트 숨김 */
+    @media (max-width: 480px) { .p-step span { display: none; } }
+
+    /* CARD */
+    .mcard {
+      background: var(--white); border: 1px solid rgba(15,15,13,0.08);
+      padding: 1.5rem 1.5rem; margin-bottom: 1rem;
+      animation: fadeUp 0.3s ease both;
+    }
+    .mcard h3 {
+      font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700;
+      margin-bottom: 0.4rem; word-break: keep-all;
+    }
+    .mcard .sub { font-size: 14px; color: var(--ink-60); margin-bottom: 1.25rem; line-height: 1.6; word-break: keep-all; }
+
+    /* URL INPUT */
+    .url-row { display: flex; gap: 8px; }
+    .url-row input {
+      flex: 1; min-width: 0; height: 44px; padding: 0 12px;
+      border: 1.5px solid rgba(15,15,13,0.15);
+      font-size: 14px; font-family: inherit; outline: none;
+      background: var(--cream); color: var(--ink);
+      transition: border-color 0.2s; border-radius: 0;
+    }
+    .url-row input:focus { border-color: var(--ink); }
+
+    /* FETCH ANIMATION */
+    .fetch-loading {
+      display: none; background: var(--white);
+      border: 1px solid rgba(15,15,13,0.08);
+      padding: 1.5rem; margin-bottom: 1rem;
+    }
+    .fetch-steps { display: flex; flex-direction: column; gap: 9px; margin-bottom: 1rem; }
+    .fetch-step { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--ink-30); transition: color 0.3s; }
+    .fetch-step.active { color: var(--ink); }
+    .fetch-step.done   { color: var(--green); }
+    .fs-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-30); flex-shrink: 0; transition: background 0.3s; }
+    .fetch-step.active .fs-dot { background: var(--ink); animation: pulse 0.8s infinite; }
+    .fetch-step.done   .fs-dot { background: var(--green); animation: none; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+    .fetch-bar-wrap { height: 3px; background: var(--cream-d); overflow: hidden; }
+    .fetch-bar { height: 100%; background: var(--ink); width: 0%; transition: width 0.4s ease; }
+
+    /* BLOG INFO */
+    .blog-info-bar {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--cream); padding: 12px 16px;
+      margin-bottom: 1.25rem; border-left: 3px solid var(--gold);
+    }
+    .blog-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--ink); color: var(--white);
+      font-family: 'Playfair Display', serif; font-weight: 700; font-size: 15px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .blog-name { font-size: 14px; font-weight: 600; }
+    .blog-meta { font-size: 11px; color: var(--gold); margin-top: 2px; }
+
+    /* POST LIST */
+    .sel-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .sel-bar span { font-size: 13px; color: var(--ink-60); }
+    .sel-count { font-size: 13px; font-weight: 600; color: var(--green); }
+    .post-list {
+      display: flex; flex-direction: column; gap: 6px;
+      margin-bottom: 1.25rem; max-height: 480px; overflow-y: auto;
+    }
+    .post-list::-webkit-scrollbar { width: 3px; }
+    .post-list::-webkit-scrollbar-thumb { background: var(--ink-30); }
+    .post-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid rgba(15,15,13,0.08);
+      cursor: pointer; transition: all 0.15s; background: var(--white);
+    }
+    .post-item:hover { border-color: rgba(15,15,13,0.2); background: var(--cream); }
+    .post-item.sel   { border-color: var(--green); background: #f0f8f3; }
+    .post-num {
+      font-family: 'Playfair Display', serif; font-size: 12px; font-weight: 700;
+      color: var(--ink-30); flex-shrink: 0; min-width: 20px; margin-top: 3px;
+    }
+    .post-item.sel .post-num { color: var(--green); }
+    .post-chk {
+      width: 17px; height: 17px; flex-shrink: 0;
+      border: 1.5px solid rgba(15,15,13,0.2);
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; background: white; margin-top: 3px;
+    }
+    .post-item.sel .post-chk { background: var(--green); border-color: var(--green); }
+    .post-item.sel .post-chk::after { content: '✓'; color: white; font-size: 10px; font-weight: 700; }
+    .post-cat {
+      display: inline-block; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      padding: 2px 6px; margin-bottom: 4px;
+    }
+    .cat-essay   { background: #f0f0ff; color: #3a3a7a; }
+    .cat-finance { background: #fff8e8; color: #7a5a00; }
+    .cat-study   { background: #f0fff5; color: #1a4a2e; }
+    .cat-life    { background: #fff0f5; color: #6a1a2e; }
+    .cat-civic   { background: #f0f8ff; color: #1a3a5a; }
+    .post-title-text {
+      font-size: 13px; font-weight: 500; color: var(--ink);
+      margin-bottom: 4px; line-height: 1.5; word-break: keep-all;
+    }
+    .post-preview { font-size: 12px; color: var(--ink-60); line-height: 1.5; word-break: keep-all; }
+    .post-date { font-size: 11px; color: var(--ink-30); margin-top: 4px; }
+
+    /* AI LOADING */
+    .ai-loading { padding: 1.25rem 0; }
+    .ai-bar-wrap { height: 3px; background: var(--cream-d); overflow: hidden; margin: 0.75rem 0; }
+    .ai-bar { height: 100%; background: var(--ink); width: 0%; transition: width 0.4s ease; }
+    .ai-msg { font-size: 13px; color: var(--ink-60); }
+
+    /* BOOK RESULT */
+    .book-result-wrap { display: flex; gap: 1.5rem; align-items: flex-start; margin-bottom: 1.75rem; }
+    .result-book { flex-shrink: 0; filter: drop-shadow(0 8px 24px rgba(15,15,13,0.22)); }
+    .rb-inner { display: flex; }
+    .rb-spine { width: 14px; background: linear-gradient(180deg, #0a2d1a 0%, #1a4a2e 100%); border-radius: 3px 0 0 3px; }
+    .rb-front {
+      width: 110px; height: 154px;
+      background: linear-gradient(145deg, #1a4a2e, #2d7a4f);
+      border-radius: 0 4px 4px 0;
+      padding: 14px 12px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden; position: relative;
+    }
+    .rb-front::after {
+      content: ''; position: absolute; bottom: -18px; right: -18px;
+      width: 72px; height: 72px; border-radius: 50%;
+      background: rgba(184,150,46,0.18);
+    }
+    .rb-label  { font-size: 7px; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; }
+    .rb-title  { font-family: 'Noto Serif KR', serif; font-size: 13px; font-weight: 700; color: white; line-height: 1.4; }
+    .rb-line   { width: 26px; height: 1.5px; background: var(--gold); margin: 5px 0; }
+    .rb-author { font-size: 8px; color: rgba(255,255,255,0.55); }
+    .rb-pages  { width: 7px; background: repeating-linear-gradient(180deg, #f8f4ec 0px, #f8f4ec 3px, #e8e3d8 3px, #e8e3d8 4px); border-radius: 0 2px 2px 0; }
+    .result-info { flex: 1; min-width: 0; }
+    .result-title  { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 700; color: var(--ink); margin-bottom: 5px; line-height: 1.3; word-break: keep-all; }
+    .result-byline { font-size: 12px; color: var(--ink-60); margin-bottom: 0.75rem; }
+    .stats-row     { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 0.75rem; }
+    .stat-tag      { background: var(--cream); border: 1px solid rgba(15,15,13,0.1); padding: 3px 10px; font-size: 11px; color: var(--ink-60); }
+    .result-desc   { font-size: 13px; color: var(--ink-60); line-height: 1.7; word-break: keep-all; }
+
+    /* TOC */
+    .toc-list { display: flex; flex-direction: column; gap: 8px; }
+    .toc-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 16px; border-left: 2px solid var(--gold); background: var(--cream);
+    }
+    .toc-num { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream-d); line-height: 1; min-width: 28px; }
+    .toc-chapter { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; word-break: keep-all; }
+    .toc-posts    { font-size: 12px; color: var(--ink-60); line-height: 1.8; }
+    .toc-posts span { display: block; word-break: keep-all; }
+    .toc-posts span::before { content: '· '; color: var(--gold); }
+
+    /* BINDING */
+    .binding-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5px; background: rgba(15,15,13,0.08); margin-bottom: 1.25rem; }
+    .bind-opt { padding: 1.25rem; background: var(--cream); cursor: pointer; transition: background 0.15s; }
+    .bind-opt:hover { background: var(--white); }
+    .bind-opt.sel   { background: var(--ink); }
+    .bind-name  { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .bind-opt.sel .bind-name { color: var(--white); }
+    .bind-desc  { font-size: 12px; color: var(--ink-60); margin-bottom: 8px; }
+    .bind-opt.sel .bind-desc  { color: rgba(255,255,255,0.45); }
+    .bind-price { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green); }
+    .bind-opt.sel .bind-price { color: var(--gold); }
+    .order-total {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 0; border-top: 1px solid var(--cream-d); margin-bottom: 1rem;
+    }
+    .order-total span  { font-size: 14px; color: var(--ink-60); }
+    .order-total strong { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--green); }
+
+    /* COMPLETE */
+    .complete-wrap { text-align: center; padding: 2.5rem 1rem; }
+    .complete-icon  { font-size: 44px; margin-bottom: 1.25rem; }
+    .complete-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; margin-bottom: 0.6rem; word-break: keep-all; }
+    .complete-sub   { font-size: 14px; color: var(--ink-60); line-height: 1.7; margin-bottom: 1.75rem; word-break: keep-all; }
+    .order-summary  { background: var(--cream); padding: 1rem; text-align: left; margin-bottom: 1.75rem; }
+    .o-row { display: flex; justify-content: space-between; font-size: 13px; padding: 7px 0; border-bottom: 1px solid var(--cream-d); gap: 1rem; }
+    .o-row:last-child { border-bottom: none; }
+    .o-row span   { color: var(--ink-60); flex-shrink: 0; }
+    .o-row strong { color: var(--ink); text-align: right; word-break: keep-all; }
+    .o-row.total strong { color: var(--green); font-family: 'Playfair Display', serif; font-size: 17px; }
+
+    /* BUTTONS */
+    .btn-ink {
+      display: block; width: 100%; padding: 13px;
+      background: var(--ink); color: var(--white); border: none; cursor: pointer;
+      font-size: 14px; font-weight: 500; letter-spacing: 0.04em;
+      font-family: inherit; text-align: center; text-decoration: none;
+      transition: background 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ink:hover { background: var(--green); }
+    .btn-ghost {
+      display: block; width: 100%; padding: 12px;
+      background: transparent; color: var(--ink);
+      border: 1px solid rgba(15,15,13,0.2); cursor: pointer;
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      transition: background 0.2s; -webkit-tap-highlight-color: transparent;
+    }
+    .btn-ghost:hover { background: var(--cream); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+    /* ════════════════════════════
+       MOBILE BREAKPOINTS
+    ════════════════════════════ */
+
+    /* 태블릿 이하 (≤ 900px) */
+    @media (max-width: 900px) {
+      /* 히어로: 세로 스택 */
+      .hero { grid-template-columns: 1fr; }
+      .hero-left { padding: 3rem 1.5rem 2.5rem; order: 1; }
+      .hero-right { min-height: 52vw; order: 2; }
+      .hero-h1 { font-size: clamp(32px, 7vw, 52px); }
+      .hero-sub { font-size: 14px; }
+
+      /* How */
+      .how { padding: 4rem 1.5rem; }
+      .steps-row { grid-template-columns: 1fr 1fr; }
+      .step-block:nth-child(2) { border-right: none; }
+      .step-block:nth-child(3) { border-top: 1px solid rgba(15,15,13,0.08); }
+
+      /* Dark */
+      .dark-band { grid-template-columns: 1fr; padding: 4rem 1.5rem; gap: 2.5rem; }
+
+      /* Pricing */
+      .pricing { padding: 4rem 1.5rem; }
+      .price-grid { grid-template-columns: 1fr; }
+
+      /* Footer */
+      footer { padding: 2rem 1.5rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    }
+
+    /* 모바일 (≤ 600px) */
+    @media (max-width: 600px) {
+      nav { height: 52px; padding: 0 1rem; }
+      .page { padding-top: 52px; }
+
+      /* NAV: 텍스트 링크 숨김 */
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-links { gap: 0; }
+
+      /* HERO */
+      .hero-left { padding: 2rem 1.25rem 2rem; }
+      .hero-eyebrow { font-size: 10px; margin-bottom: 1rem; }
+      .hero-h1 {
+        font-size: clamp(30px, 8.5vw, 42px);
+        line-height: 1.12; margin-bottom: 1rem;
+      }
+      .hero-sub { font-size: 14px; margin-bottom: 2rem; }
+      .hero-input-row input { font-size: 13px; padding: 12px 12px; }
+      .hero-input-row button { font-size: 12px; padding: 0 14px; }
+      .hero-note { font-size: 11px; }
+      .hero-right { min-height: 56vw; }
+      .sb-cover { width: 120px; height: 168px; }
+      .hero-quote { display: none; }
+
+      /* HOW */
+      .how { padding: 3rem 1.25rem; }
+      .steps-row { grid-template-columns: 1fr; border: none; gap: 1px; background: rgba(15,15,13,0.08); }
+      .step-block { border-right: none; border-bottom: none; display: flex; gap: 14px; align-items: flex-start; }
+      .step-block:nth-child(3) { border-top: none; }
+      .step-arrow { display: none; }
+      .step-num { display: none; }
+      .step-num-badge { display: flex; flex-shrink: 0; margin-top: 2px; }
+      .step-block h3 { margin-bottom: 0.3rem; }
+
+      /* DARK */
+      .dark-band { padding: 3rem 1.25rem; gap: 2rem; }
+      .dark-band h2 { font-size: clamp(22px, 6vw, 30px); }
+
+      /* PRICING */
+      .pricing { padding: 3rem 1.25rem; }
+      .price-amount { font-size: 30px; }
+
+      /* MAKE PAGE */
+      .make-page { padding: 2rem 1rem 4rem; }
+      .make-header h2 { font-size: 22px; }
+      .mcard { padding: 1.25rem; }
+      .mcard h3 { font-size: 16px; }
+
+      /* 책 미리보기: 세로 스택 */
+      .book-result-wrap { flex-direction: column; align-items: flex-start; }
+      .result-title { font-size: 17px; }
+
+      /* 제본: 세로 스택 */
+      .binding-grid { grid-template-columns: 1fr; }
+
+      /* TOC */
+      .toc-chapter { font-size: 13px; }
+      .toc-posts { font-size: 11px; }
+
+      /* FOOTER */
+      footer { padding: 1.75rem 1.25rem; }
+      .f-logo { font-size: 16px; }
+    }
+
+    /* 아주 작은 화면 (≤ 380px) */
+    @media (max-width: 380px) {
+      .hero-h1 { font-size: 28px; }
+      .hero-input-row button { padding: 0 12px; font-size: 11px; }
+      .sb-cover { width: 100px; height: 140px; }
+      .sb-title { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadScreen">
+  <div class="load-inner">
+    <div class="load-logo">
+      <div class="load-book-icon"><span></span><span></span><span></span></div>
+      BLOCK
+    </div>
+    <div class="load-sub">Blog to Book · AI Publishing</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('landing')">
+    <div class="nav-book-icon"><span></span><span></span><span></span></div>
+    BLOCK
+  </div>
+  <div class="nav-links">
+    <a href="#how">만드는 방법</a>
+    <a href="#pricing">가격</a>
+    <a class="nav-cta" onclick="showPage('make')">책 만들기</a>
+  </div>
+</nav>
+
+<!-- ══════════ LANDING ══════════ -->
+<div class="page on" id="page-landing">
+
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Blog to Book · AI Publishing</div>
+      <h1 class="hero-h1">블로그의 기록이<br><em>한 권의 책</em>이<br>됩니다</h1>
+      <p class="hero-sub">URL 하나만 입력하세요.<br>AI가 당신의 글을 분석해 아름다운 책으로<br>편집하고 집까지 배송해드립니다.</p>
+      <div class="hero-input-group">
+        <div class="hero-input-row">
+          <input type="text" id="heroUrl" placeholder="https://blog.naver.com/아이디" />
+          <button onclick="startMake()">책 만들기</button>
+        </div>
+        <p class="hero-note">네이버 · 티스토리 · 브런치 · 워드프레스 지원</p>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="book-stack">
+        <div class="stacked-book book1">
+          <div class="sb-spine"></div>
+          <div class="sb-cover">
+            <div class="sb-label">BLOCK · 2026</div>
+            <div><div class="sb-title">기록하는<br>청년</div><div class="sb-deco"></div><div class="sb-author">정현준 지음</div></div>
+          </div>
+          <div class="sb-pages"></div>
+        </div>
+        <div class="stacked-book book2">
+          <div class="sb-spine"></div>
+          <div class="sb-cover">
+            <div class="sb-label">BLOCK · 2025</div>
+            <div><div class="sb-title">돈을<br>공부하다</div><div class="sb-deco"></div><div class="sb-author">김민준 지음</div></div>
+          </div>
+          <div class="sb-pages"></div>
+        </div>
+        <div class="stacked-book book3">
+          <div class="sb-spine"></div>
+          <div class="sb-cover">
+            <div class="sb-label">BLOCK · 2025</div>
+            <div><div class="sb-title">여행의<br>조각들</div><div class="sb-deco"></div><div class="sb-author">이서윤 지음</div></div>
+          </div>
+          <div class="sb-pages"></div>
+        </div>
+      </div>
+      <div class="hero-quote">"기록은 사라지지 않는다.<br>다만 잊혀질 뿐이다."</div>
+    </div>
+  </section>
+
+  <section class="how" id="how">
+    <div class="section-eyebrow">How it works</div>
+    <div class="section-title">단 4단계로<br>완성됩니다</div>
+    <div class="steps-row">
+      <div class="step-block">
+        <div class="step-num-badge">1</div>
+        <div class="step-num">01</div>
+        <div>
+          <h3>URL 입력</h3>
+          <p>블로그 주소를 입력하면<br>AI가 글 목록을 자동으로<br>불러옵니다.</p>
+        </div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step-block">
+        <div class="step-num-badge">2</div>
+        <div class="step-num">02</div>
+        <div>
+          <h3>로그인 &amp; 글 선택</h3>
+          <p>로그인 후 책에 담고 싶은<br>글을 선택합니다.</p>
+        </div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step-block">
+        <div class="step-num-badge">3</div>
+        <div class="step-num">03</div>
+        <div>
+          <h3>AI 편집</h3>
+          <p>AI가 글의 흐름을 분석해<br>목차와 챕터를 자동<br>구성합니다.</p>
+        </div>
+        <div class="step-arrow">→</div>
+      </div>
+      <div class="step-block">
+        <div class="step-num-badge">4</div>
+        <div class="step-num">04</div>
+        <div>
+          <h3>제본 &amp; 배송</h3>
+          <p>원하는 제본 방식을 선택하면<br>완성된 책을 집으로<br>배송해드립니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dark-band">
+    <div>
+      <div class="gold-line"></div>
+      <h2>AI가 목차를 구성하고,<br>당신의 글이<br>내용이 됩니다</h2>
+      <p>AI가 추가하거나 바꾸는 것은 없습니다.<br>당신이 쓴 글 그 자체가 책의 내용이 됩니다.<br>AI는 오직 목차와 구성만 도와드립니다.</p>
+    </div>
+    <div class="features-list">
+      <div class="feature-row">
+        <div class="feature-icon">📖</div>
+        <div>
+          <h4>원문 그대로</h4>
+          <p>블로거가 쓴 글을 한 글자도 바꾸지 않습니다. 당신의 목소리가 그대로 담깁니다.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon">🗂️</div>
+        <div>
+          <h4>AI 목차 구성</h4>
+          <p>글의 주제와 시간 흐름을 분석해 자연스러운 챕터 구성을 만들어냅니다.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon">🎨</div>
+        <div>
+          <h4>표지 디자인</h4>
+          <p>블로그 분위기에 맞는 맞춤형 북커버를 자동으로 디자인합니다.</p>
+        </div>
+      </div>
+      <div class="feature-row">
+        <div class="feature-icon">📦</div>
+        <div>
+          <h4>전국 배송</h4>
+          <p>제본 완료 후 5~7일 이내 전국 배송됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <div class="section-eyebrow">Pricing</div>
+    <div class="section-title">합리적인 가격</div>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-tag">Soft Cover</div>
+        <div class="price-name">소프트커버</div>
+        <div class="price-amount">19,900</div>
+        <div class="price-unit">원 · 100페이지 기준</div>
+        <ul class="price-list">
+          <li>AI 자동 목차 구성</li>
+          <li>맞춤형 표지 디자인</li>
+          <li>무선 제본</li>
+          <li>PDF 미리보기 무료</li>
+          <li>전국 배송 포함</li>
+        </ul>
+        <a class="btn-book" onclick="showPage('make')">시작하기</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-tag">Most Popular</div>
+        <div class="price-name">하드커버</div>
+        <div class="price-amount">34,900</div>
+        <div class="price-unit">원 · 100페이지 기준</div>
+        <ul class="price-list">
+          <li>AI 자동 목차 구성</li>
+          <li>고급 맞춤형 표지 디자인</li>
+          <li>양장 제본</li>
+          <li>PDF 미리보기 무료</li>
+          <li>전국 배송 포함</li>
+          <li>보관 케이스 증정</li>
+        </ul>
+        <a class="btn-book" onclick="showPage('make')">시작하기</a>
+      </div>
+      <div class="price-card">
+        <div class="price-tag">Gift Set</div>
+        <div class="price-name">선물 세트</div>
+        <div class="price-amount">59,900~</div>
+        <div class="price-unit">원 · 2권 제작</div>
+        <ul class="price-list">
+          <li>하드커버 2권 제작</li>
+          <li>고급 선물 포장</li>
+          <li>손편지 카드 동봉</li>
+          <li>PDF 미리보기 무료</li>
+          <li>전국 배송 포함</li>
+          <li>메시지 각인 옵션</li>
+        </ul>
+        <a class="btn-book" onclick="showPage('make')">시작하기</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="f-logo">
+      <div class="f-book-icon"><span></span><span></span><span></span></div>
+      BLOCK
+    </div>
+    <p>© 2026 BLOCK. 내 블로그의 모든 기록을 영원히.</p>
+  </footer>
+</div>
+
+<!-- ══════════ MAKE PAGE ══════════ -->
+<div class="page" id="page-make">
+  <div class="make-page">
+    <div class="make-header">
+      <h2>내 책 만들기</h2>
+      <p>블로그 URL을 입력하고 AI에게 맡기세요</p>
+    </div>
+
+    <div class="progress">
+      <div class="p-step active" id="ps1"><div class="p-dot">1</div><span>URL</span></div>
+      <div class="p-line" id="pl1"></div>
+      <div class="p-step" id="ps2"><div class="p-dot">2</div><span>글 선택</span></div>
+      <div class="p-line" id="pl2"></div>
+      <div class="p-step" id="ps3"><div class="p-dot">3</div><span>AI 구성</span></div>
+      <div class="p-line" id="pl3"></div>
+      <div class="p-step" id="ps4"><div class="p-dot">4</div><span>주문</span></div>
+      <div class="p-line" id="pl4"></div>
+      <div class="p-step" id="ps5"><div class="p-dot">5</div><span>완료</span></div>
+    </div>
+
+    <!-- S1: URL -->
+    <div id="s1">
+      <div class="mcard">
+        <h3>블로그 URL 입력</h3>
+        <div class="sub">네이버 블로그 주소를 입력하세요.</div>
+        <div class="url-row">
+          <input type="text" id="makeUrl" value="https://blog.naver.com/jhj050428"
+            onfocus="this.style.borderColor='var(--ink)'"
+            onblur="this.style.borderColor='rgba(15,15,13,0.15)'" />
+          <button class="btn-ink" style="width:auto;padding:0 20px;flex-shrink:0;" id="fetchBtn" onclick="doFetch()">불러오기</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FETCH LOADING -->
+    <div class="fetch-loading" id="fetchLoading">
+      <div class="fetch-steps">
+        <div class="fetch-step" id="fs1"><div class="fs-dot"></div><span>블로그 서버에 연결 중...</span></div>
+        <div class="fetch-step" id="fs2"><div class="fs-dot"></div><span>글 목록 파싱 중...</span></div>
+        <div class="fetch-step" id="fs3"><div class="fs-dot"></div><span>본문 데이터 수집 중...</span></div>
+        <div class="fetch-step" id="fs4"><div class="fs-dot"></div><span>데이터 정리 완료</span></div>
+      </div>
+      <div class="fetch-bar-wrap"><div class="fetch-bar" id="fetchBar"></div></div>
+    </div>
+
+    <!-- S2: 글 선택 -->
+    <div id="s2" style="display:none;">
+      <div class="mcard">
+        <div class="blog-info-bar">
+          <div class="blog-avatar">정</div>
+          <div>
+            <div class="blog-name">정현준의 블로그</div>
+            <div class="blog-meta">글 11개 불러옴 · 실시간 연동 완료</div>
+          </div>
+        </div>
+        <h3>책에 담을 글 선택</h3>
+        <div class="sub">총 11개의 글을 불러왔습니다.<br>원하지 않는 글은 해제하세요.</div>
+        <div class="sel-bar">
+          <span>전체 11개</span>
+          <span class="sel-count" id="selCount">11개 선택</span>
+        </div>
+        <div class="post-list" id="postList"></div>
+        <button class="btn-ink" id="composeBtn" onclick="doCompose()">선택한 글로 책 구성하기 →</button>
+      </div>
+    </div>
+
+    <!-- S3: AI 구성 -->
+    <div id="s3" style="display:none;">
+      <div class="mcard" id="aiLoadCard">
+        <h3>AI가 책을 구성하고 있습니다</h3>
+        <div class="sub">선택한 글의 주제와 흐름을 분석해<br>목차를 만들고 있어요.</div>
+        <div class="ai-loading">
+          <div class="ai-bar-wrap"><div class="ai-bar" id="aiBar"></div></div>
+          <div class="ai-msg" id="aiMsg">글 내용 분석 중...</div>
+        </div>
+      </div>
+
+      <div id="aiResult" style="display:none;">
+
+        <div class="mcard">
+          <h3 style="margin-bottom:1.25rem;">책 미리보기</h3>
+          <div class="book-result-wrap">
+            <div class="result-book">
+              <div class="rb-inner">
+                <div class="rb-spine"></div>
+                <div class="rb-front">
+                  <div class="rb-label">BLOCK · 2026</div>
+                  <div><div class="rb-title">기록하는<br>청년</div><div class="rb-line"></div><div class="rb-author">정현준 지음</div></div>
+                </div>
+                <div class="rb-pages"></div>
+              </div>
+            </div>
+            <div class="result-info">
+              <div class="result-title">기록하는 청년</div>
+              <div class="result-byline">정현준 지음 · BLOCK AI 편집</div>
+              <div class="stats-row">
+                <span class="stat-tag">11개 글</span>
+                <span class="stat-tag">3개 챕터</span>
+                <span class="stat-tag">약 112페이지</span>
+                <span class="stat-tag">에세이 · 지식</span>
+              </div>
+              <div class="result-desc">시민으로서의 실천, 금융 공부, 그리고 일상의 성찰. 정현준이 블로그에 직접 쓴 11편의 글을 AI가 하나의 흐름으로 엮었습니다. 글은 한 글자도 바뀌지 않았습니다.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mcard">
+          <h3 style="margin-bottom:1.25rem;">AI가 구성한 목차</h3>
+          <div class="toc-list">
+            <div class="toc-item">
+              <div class="toc-num">1</div>
+              <div>
+                <div class="toc-chapter">나는 어떻게 살 것인가</div>
+                <div class="toc-posts">
+                  <span>소신발언에 대한 소신발언</span>
+                  <span>기회를 잡을 자의 현재</span>
+                  <span>구심력이 있는 사람!</span>
+                  <span>내가 선명히 상상하는 미래는, 실현된다.</span>
+                  <span>일단 해보는 거야!</span>
+                </div>
+              </div>
+            </div>
+            <div class="toc-item">
+              <div class="toc-num">2</div>
+              <div>
+                <div class="toc-chapter">배우고, 익히고, 기록하다</div>
+                <div class="toc-posts">
+                  <span>[주식 기초] 주식을 이해하는 첫 번째 단추, 호가창 (1)</span>
+                  <span>[중학생도 이해하는 절세 기초 상식] 절세의 시작-핵심-꽃, "중개형 ISA"</span>
+                  <span>[ADsP 비전공자 10일 합격 후기] ADsP(데이터분석준전문가) 책 추천,</span>
+                  <span>토스 만보기 연속 방문 '상위 비율' 정리</span>
+                </div>
+              </div>
+            </div>
+            <div class="toc-item">
+              <div class="toc-num">3</div>
+              <div>
+                <div class="toc-chapter">유한한 삶에서 무언가를 남긴다는 것</div>
+                <div class="toc-posts">
+                  <span>Memento mori, 죽을 것임을 기억하라</span>
+                  <span>주민 참여로 더 나은 안성 공도를 그리다.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mcard">
+          <h3 style="margin-bottom:0.5rem;">제본 방식 선택</h3>
+          <div class="sub">주문 전 PDF 미리보기를 무료로 확인하실 수 있습니다.</div>
+          <div class="binding-grid">
+            <div class="bind-opt sel" onclick="selBind(this,19900)">
+              <div class="bind-name">소프트커버</div>
+              <div class="bind-desc">무선제본 · 배송 5~7일</div>
+              <div class="bind-price">19,900원</div>
+            </div>
+            <div class="bind-opt" onclick="selBind(this,34900)">
+              <div class="bind-name">하드커버</div>
+              <div class="bind-desc">양장제본 · 배송 7~10일</div>
+              <div class="bind-price">34,900원</div>
+            </div>
+          </div>
+          <div class="order-total">
+            <span>총 결제 금액</span>
+            <strong id="totalPrice">19,900원</strong>
+          </div>
+          <button class="btn-ink" style="margin-bottom:10px;" onclick="goStep(5)">주문하기</button>
+          <button class="btn-ghost">PDF 미리보기 (무료)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- S5: 완료 -->
+    <div id="s5" style="display:none;">
+      <div class="mcard">
+        <div class="complete-wrap">
+          <div class="complete-icon">📚</div>
+          <div class="complete-title">주문이 완료되었습니다</div>
+          <div class="complete-sub"><strong>기록하는 청년</strong>이 곧 제작에 들어갑니다.<br>5~7일 이내 배송될 예정입니다.</div>
+          <div class="order-summary">
+            <div class="o-row"><span>주문 상품</span><strong>기록하는 청년</strong></div>
+            <div class="o-row"><span>예상 배송일</span><strong>5~7일 이내</strong></div>
+            <div class="o-row total"><span>결제 금액</span><strong id="finalPrice">19,900원</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn-ink" onclick="showPage('make')">같은 URL로 다시 만들기</button>
+            <button class="btn-ghost" onclick="showPage('landing')">홈으로 돌아가기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const POSTS = [
+  { id:1,  cat:'essay',   catLabel:'에세이',   title:'소신발언에 대한 소신발언',         date:'2025. 10. 1',  preview:'나는 관찰하는 것을 좋아한다. 소신발언이란 무엇인지에 대해 생각해본 글.' },
+  { id:2,  cat:'essay',   catLabel:'에세이',   title:'기회를 잡을 자의 현재',            date:'2025. 10. 26', preview:'기회란 무엇이고, 기회를 잡을 준비가 된 사람의 현재는 어떠해야 하는가.' },
+  { id:3,  cat:'essay',   catLabel:'에세이',   title:'구심력이 있는 사람!',              date:'2025. 11. 2',  preview:'그런 사람이 있어요. 사람 잘 모으는 사람. 구심력이 있는 사람에 대한 관찰과 생각.' },
+  { id:4,  cat:'essay',   catLabel:'에세이',   title:'내가 선명히 상상하는 미래는, 실현된다.', date:'2025. 9. 21', preview:'꿈꿀 수 있다면 이룰 수 있다. 선명한 상상이 현실이 되는 과정에 대한 이야기.' },
+  { id:5,  cat:'essay',   catLabel:'에세이',   title:'일단 해보는 거야!',               date:'2025. 11. 9',  preview:'완벽한 준비를 기다리기보다 일단 시작해보는 것에 대한 이야기.' },
+  { id:6,  cat:'finance', catLabel:'금융',     title:'[주식 기초] 주식을 이해하는 첫 번째 단추, 호가창 (1)', date:'2025. 8. 30', preview:'호가란 무엇인지 이해하고, 호가창에서 얻을 수 있는 정보 세 가지를 알아봅니다.' },
+  { id:7,  cat:'finance', catLabel:'금융',     title:'[중학생도 이해하는 절세 기초 상식] 절세의 시작-핵심-꽃, "중개형 ISA"', date:'2025. 9. 4', preview:'ISA의 개념, 장점(절세 혜택), 단점(의무 가입 기간)을 쉽게 설명합니다.' },
+  { id:8,  cat:'study',   catLabel:'공부',     title:'[ADsP 비전공자 10일 합격 후기] ADsP(데이터분석준전문가) 책 추천,', date:'2025. 9. 7', preview:'비전공자가 10일 만에 ADsP를 합격한 후기. 책 추천과 공부 방법을 공유합니다.' },
+  { id:9,  cat:'life',    catLabel:'일상',     title:"토스 만보기 연속 방문 '상위 비율' 정리", date:'2026. 3. 7', preview:'토스 만보기 179일 연속 방문 시 상위 비율을 직접 정리한 꾸준함의 기록.' },
+  { id:10, cat:'essay',   catLabel:'에세이',   title:'Memento mori, 죽을 것임을 기억하라', date:'2025. 11. 30', preview:'끝이 있음을 인지하고 살아가는 사람. 죽음을 기억하는 것이 삶을 더 충만하게 만든다.' },
+  { id:11, cat:'civic',   catLabel:'시민참여', title:'주민 참여로 더 나은 안성 공도를 그리다.', date:'2026. 3. 20', preview:'주민참여예산제도를 통해 빨간불 잔여 시간 표시 신호등을 제안하고 실제 성과를 이끌어낸 과정.' },
+];
+
+let selected = new Set(POSTS.map(p => p.id));
+let price = 19900;
+
+setTimeout(() => document.getElementById('loadScreen').classList.add('hide'), 1500);
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('page-' + name).classList.add('on');
+  window.scrollTo(0, 0);
+  // make 페이지 진입 시 항상 완전 리셋
+  if (name === 'make') resetMake();
+}
+
+function resetMake() {
+  // 상태 초기화
+  selected = new Set(POSTS.map(p => p.id));
+  price = 19900;
+
+  // 모든 스텝 숨기고 1만 표시
+  ['s1','s2','s3','s5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('s1').style.display = 'block';
+  setProgress(1);
+
+  // fetch 로딩 초기화
+  document.getElementById('fetchLoading').style.display = 'none';
+  document.getElementById('fetchBtn').disabled = false;
+  document.getElementById('fetchBar').style.width = '0%';
+  ['fs1','fs2','fs3','fs4'].forEach(id => {
+    document.getElementById(id).className = 'fetch-step';
+  });
+
+  // AI 결과 초기화
+  document.getElementById('aiLoadCard').style.display = 'block';
+  document.getElementById('aiResult').style.display = 'none';
+  document.getElementById('aiBar').style.width = '0%';
+  document.getElementById('aiMsg').textContent = '글 내용 분석 중...';
+
+  // 제본 선택 초기화
+  document.querySelectorAll('.bind-opt').forEach(b => b.classList.remove('sel'));
+  const firstBind = document.querySelector('.bind-opt');
+  if (firstBind) firstBind.classList.add('sel');
+  const totalEl = document.getElementById('totalPrice');
+  if (totalEl) totalEl.textContent = '19,900원';
+}
+
+function startMake() {
+  const url = document.getElementById('heroUrl').value.trim();
+  if (url) document.getElementById('makeUrl').value = url;
+  showPage('make');
+}
+
+function setProgress(n) {
+  for (let i = 1; i <= 5; i++) {
+    document.getElementById('ps' + i).className = 'p-step' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('pl' + i).className = 'p-line' + (i < n ? ' done' : '');
+  }
+}
+
+function showStep(n) {
+  ['s1','s2','s3','s5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  setProgress(n);
+  const map = {1:'s1', 2:'s2', 3:'s3', 5:'s5'};
+  if (map[n]) {
+    const el = document.getElementById(map[n]);
+    el.style.display = 'block';
+    el.style.animation = 'fadeUp 0.3s ease both';
+  }
+  window.scrollTo(0, 0);
+}
+
+function goStep(n) {
+  showStep(n);
+  if (n === 3) runAI();
+  if (n === 5) document.getElementById('finalPrice').textContent = price.toLocaleString() + '원';
+}
+
+function doFetch() {
+  document.getElementById('fetchLoading').style.display = 'block';
+  document.getElementById('fetchBtn').disabled = true;
+  const steps = ['fs1','fs2','fs3','fs4'];
+  let si = 0;
+  const bar = document.getElementById('fetchBar');
+  function next() {
+    if (si > 0) document.getElementById(steps[si-1]).className = 'fetch-step done';
+    if (si < steps.length) {
+      document.getElementById(steps[si]).className = 'fetch-step active';
+      si++;
+      bar.style.width = (si / steps.length * 100) + '%';
+      if (si < steps.length) setTimeout(next, 750);
+      else setTimeout(() => {
+        document.getElementById('fetchLoading').style.display = 'none';
+        document.getElementById('fetchBtn').disabled = false;
+        renderPosts();
+        showStep(2);
+      }, 700);
+    }
+  }
+  next();
+}
+
+function renderPosts() {
+  const list = document.getElementById('postList');
+  list.innerHTML = '';
+  POSTS.forEach((post, idx) => {
+    const el = document.createElement('div');
+    el.className = 'post-item sel';
+    el.innerHTML = `
+      <div class="post-num">${String(idx+1).padStart(2,'0')}</div>
+      <div class="post-chk"></div>
+      <div style="flex:1;min-width:0;">
+        <span class="post-cat cat-${post.cat}">${post.catLabel}</span>
+        <div class="post-title-text">${post.title}</div>
+        <div class="post-preview">${post.preview}</div>
+        <div class="post-date">${post.date}</div>
+      </div>
+    `;
+    el.onclick = () => {
+      el.classList.toggle('sel');
+      if (el.classList.contains('sel')) selected.add(post.id);
+      else selected.delete(post.id);
+      document.getElementById('selCount').textContent = selected.size + '개 선택';
+      document.getElementById('composeBtn').disabled = selected.size === 0;
+    };
+    list.appendChild(el);
+  });
+  document.getElementById('selCount').textContent = selected.size + '개 선택';
+}
+
+function doCompose() {
+  if (selected.size === 0) return;
+  goStep(3);
+}
+
+function runAI() {
+  document.getElementById('aiLoadCard').style.display = 'block';
+  document.getElementById('aiResult').style.display = 'none';
+  const bar = document.getElementById('aiBar');
+  const msg = document.getElementById('aiMsg');
+  const msgs = ['글 내용 분석 중...','주제 및 흐름 파악 중...','AI 목차 구성 중...','책 제목 생성 중...','표지 디자인 적용 중...','최종 검토 중...','완료!'];
+  let pct = 0, mi = 0;
+  const t = setInterval(() => {
+    pct = Math.min(pct + 1.2, 100);
+    bar.style.width = pct + '%';
+    const ni = Math.floor((pct / 100) * msgs.length);
+    if (ni !== mi && ni < msgs.length) { mi = ni; msg.textContent = msgs[mi]; }
+    if (pct >= 100) {
+      clearInterval(t);
+      setTimeout(() => {
+        document.getElementById('aiLoadCard').style.display = 'none';
+        document.getElementById('aiResult').style.display = 'block';
+        setProgress(4);
+      }, 400);
+    }
+  }, 45);
+}
+
+function selBind(el, p) {
+  document.querySelectorAll('.bind-opt').forEach(b => b.classList.remove('sel'));
+  el.classList.add('sel');
+  price = p;
+  document.getElementById('totalPrice').textContent = p.toLocaleString() + '원';
+}
+</script>
+</body>
+</html>
